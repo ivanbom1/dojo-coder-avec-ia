@@ -53,7 +53,8 @@ d'acceptation, réparties sur trois sprints :
    ```bash
    claude
    ```
-5. **Taper `/setup`**. L'agent installe ce qui manque et vérifie que tout fonctionne.
+5. **Taper `/setup`**. L'agent installe ce qui manque, vérifie que tout fonctionne et demande
+   où en est l'élève en code, pour adapter ses explications.
 
 En cas de problème : lever la main.
 
@@ -82,7 +83,9 @@ la stratégie technique remplie pendant `/grill-me`.
 3. L'agent implémente.
 4. Lire son résumé, en particulier ce qu'il a décidé seul, puis essayer dans le navigateur
    avec les critères de la carte.
-5. Demander le commit, et déplacer la carte en « Fait ».
+5. Lancer `/code-owner`. L'agent fait visiter le code qui tourne sous ce qui vient d'être
+   essayé, pose une question, pointe ce qui coûtera plus tard et propose de le corriger.
+6. Demander le commit, et déplacer la carte en « Fait ».
 
 Un commit et une nouvelle conversation par carte.
 
@@ -98,6 +101,7 @@ Des commandes qui donnent une méthode à l'agent :
 - `/setup` : prépare et vérifie le poste ;
 - `/grill-me <carte>` : pose des questions avant de coder et écrit la stratégie dans la
   carte ;
+- `/code-owner` : avant le commit, fait visiter le code de la carte, au niveau de l'élève ;
 - `/diagnose` : quand les essais échouent, reproduit le bug avant de le corriger ;
 - `/tdd` : écrit un test d'abord, puis le code qui le fait passer ; sert aussi à corriger une
   régression à partir d'un test qui la reproduit.

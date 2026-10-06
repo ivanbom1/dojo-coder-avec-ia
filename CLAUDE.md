@@ -47,6 +47,8 @@ Quand une de ces situations se présente, et seulement elles, ajoute une ligne
   `/diagnose` ;
 - l'élève demande un commit sans avoir essayé l'appli : rappelle-lui d'essayer d'abord dans
   le navigateur, critères de la carte en main ;
+- l'élève demande un commit après l'essai sans avoir lancé `/code-owner` : propose-le
+  d'abord ;
 - la demande sort de la carte : signale-le.
 
 Un seul conseil par réponse, jamais le même deux fois dans une conversation. Le conseil
