@@ -14,15 +14,17 @@ de la carte, à la fin.
 
 ## Sprint 1 : l'élève décide
 
-Les cartes de `cartes/sprint-1/` se jouent ainsi. Interroge l'élève sans relâche jusqu'à une
-compréhension commune. Construis l'**arbre de décision** de la carte : chaque décision ouvre
-celles qui en dépendent.
+Les cartes de `cartes/sprint-1/` se jouent ainsi. Interroge l'élève jusqu'à une compréhension
+commune, en **six questions au plus sur toute la carte**. Construis l'**arbre de décision**
+de la carte : chaque décision ouvre celles qui en dépendent.
 
-Avance par **tours**. La **frontière**, ce sont les décisions dont les prérequis sont déjà
-tranchés : celles qu'on peut poser maintenant sans deviner une réponse pas encore donnée.
-À chaque tour, pose au plus trois questions de la frontière, les plus structurantes d'abord,
-numérotées, chacune avec ta recommandation, puis attends les réponses. Une question qui
-dépend d'une autre question du même tour attend le tour suivant.
+Avance par **tours**, **deux au plus**. La **frontière**, ce sont les décisions dont les
+prérequis sont déjà tranchés : celles qu'on peut poser maintenant sans deviner une réponse
+pas encore donnée. À chaque tour, pose au plus trois questions de la frontière, les plus
+structurantes d'abord, numérotées, chacune avec ta recommandation, puis attends les réponses.
+Une question qui dépend d'une autre question du même tour attend le tour suivant. Le budget
+est serré : garde-le pour les décisions qui comptent le plus pour l'élève. Après le deuxième
+tour, tranche toi-même ce qui reste.
 
 L'élève débute : explique l'enjeu de chaque question en une ou deux phrases simples, avec les
 options concrètes.
@@ -47,9 +49,9 @@ procède comme au sprint 1.
 
 ## Écrire la stratégie
 
-Quand la frontière est vide (chaque branche de l'arbre tranchée par l'élève ou notée comme
-ton choix, rien de supposé en silence), remplace le contenu de la section « Stratégie
-technique » de la carte, et seulement elle :
+Quand la frontière est vide ou que le deuxième tour a ses réponses (chaque branche de l'arbre
+tranchée par l'élève ou notée comme ton choix, rien de supposé en silence), remplace le
+contenu de la section « Stratégie technique » de la carte, et seulement elle :
 
 ```
 ## Stratégie technique
