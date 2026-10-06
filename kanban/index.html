@@ -1,0 +1,558 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kanban du dojo</title>
+<style>
+  :root {
+    --fond: #f6f5f2;
+    --surface: #ffffff;
+    --bord: #e4e2dc;
+    --texte: #2b2a27;
+    --discret: #7c7a73;
+    --survol: #efede8;
+    --a-faire: #8a8780;
+    --en-cours: #d9822b;
+    --fait: #3f9b62;
+    --ombre: 0 1px 2px rgb(0 0 0 / 0.06), 0 1px 1px rgb(0 0 0 / 0.04);
+    --ombre-survol: 0 2px 8px rgb(0 0 0 / 0.08), 0 1px 2px rgb(0 0 0 / 0.04);
+    --ombre-haute: 0 8px 24px rgb(0 0 0 / 0.12);
+    --largeur-panneau: min(640px, 46vw);
+    color-scheme: light;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --fond: #191918;
+      --surface: #242422;
+      --bord: #353532;
+      --texte: #e8e6e1;
+      --discret: #9b9891;
+      --survol: #2d2d2a;
+      --ombre: 0 1px 2px rgb(0 0 0 / 0.4);
+      --ombre-survol: 0 2px 10px rgb(0 0 0 / 0.45);
+      --ombre-haute: 0 8px 24px rgb(0 0 0 / 0.5);
+      color-scheme: dark;
+    }
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--fond);
+    color: var(--texte);
+    font: 15px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    height: 100dvh;
+    display: flex; flex-direction: column;
+  }
+
+  header { flex: none; padding: 28px 32px 8px; }
+  header h1 { margin: 0; font-size: 22px; font-weight: 650; letter-spacing: -0.01em; }
+  header p { margin: 4px 0 0; color: var(--discret); font-size: 14px; }
+
+  /* Le tableau défile seul. Le panneau s'ouvre par-dessus sans changer la largeur des colonnes :
+     une piste vide de la largeur du panneau permet de faire défiler les colonnes cachées dessous. */
+  main {
+    flex: 1; overflow: auto;
+    padding: 8px 32px 48px;
+    display: grid; grid-template-columns: 100% 0px; align-content: start;
+    transition: grid-template-columns 0.25s ease;
+  }
+  body.panneau-ouvert main {
+    grid-template-columns: 100% var(--largeur-panneau);
+    scroll-padding-right: calc(var(--largeur-panneau) + 16px);
+    transition: none;
+  }
+  .tableau {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(180px, 1fr));
+    gap: 0 16px;
+  }
+  .entete {
+    position: sticky; top: 0; z-index: 2;
+    padding: 12px 4px 8px;
+    background: var(--fond);
+    box-shadow: 0 1px 0 var(--bord);
+    font-size: 13px; font-weight: 600; color: var(--discret);
+    display: flex; align-items: center; gap: 8px;
+  }
+  .entete + .entete { margin-left: -16px; padding-left: 20px; } /* un trait continu sous les en-têtes */
+  .pastille { width: 8px; height: 8px; border-radius: 50%; background: var(--c); }
+  .compte { font-weight: 400; }
+
+  .sprint {
+    grid-column: 1 / -1;
+    display: flex; align-items: center; gap: 12px;
+    margin: 20px 0 8px; padding-bottom: 6px;
+    border-bottom: 1px solid var(--bord);
+  }
+  .sprint h2 { margin: 0; font-size: 16px; font-weight: 650; }
+  .deplier {
+    display: flex; align-items: center; gap: 6px;
+    margin-left: -6px; padding: 2px 8px 2px 4px; border: 0; border-radius: 6px;
+    background: none; color: inherit; font: inherit; cursor: pointer;
+  }
+  .deplier:hover { background: var(--survol); }
+  .deplier svg { color: var(--discret); transition: transform 0.2s ease; }
+  .sprint.replie .deplier svg { transform: rotate(-90deg); }
+  .zone.replie { display: none; }
+  .progres { flex: 0 0 120px; height: 4px; border-radius: 2px; background: var(--bord); overflow: hidden; }
+  .progres div { height: 100%; background: var(--fait); transition: width 0.3s; }
+  .sprint span { color: var(--discret); font-size: 13px; }
+
+  .zone {
+    min-height: 64px;
+    padding: 6px;
+    border-radius: 10px;
+    display: flex; flex-direction: column; gap: 8px;
+    transition: background 0.15s, outline-color 0.15s;
+    outline: 2px dashed transparent; outline-offset: -2px;
+  }
+  .zone.possible { outline-color: var(--bord); }
+  .zone.cible { background: var(--survol); outline-color: var(--discret); }
+
+  .carte {
+    position: relative;
+    padding: 10px 12px 10px 14px;
+    background: var(--surface);
+    border: 1px solid var(--bord);
+    border-radius: 8px;
+    box-shadow: var(--ombre);
+    cursor: pointer;
+    user-select: none;
+    transition: box-shadow 0.15s, transform 0.15s, border-color 0.15s;
+  }
+  .carte::before {
+    content: ""; position: absolute; left: 0; top: 10px; bottom: 10px;
+    width: 3px; border-radius: 0 3px 3px 0; background: var(--c);
+  }
+  body:not(.glissement) .carte:hover { box-shadow: var(--ombre-survol); transform: translateY(-1px); }
+  .carte:focus-visible { outline: 2px solid var(--en-cours); outline-offset: 2px; }
+  .carte.ouverte { border-color: var(--en-cours); box-shadow: 0 0 0 1px var(--en-cours); }
+  .carte.glisse { opacity: 0.4; }
+  .carte .meta {
+    display: flex; align-items: center; gap: 6px;
+    font-size: 12px; color: var(--discret); font-variant-numeric: tabular-nums;
+  }
+  .carte .tag {
+    padding: 0 6px; border: 1px solid var(--bord); border-radius: 999px;
+    font-size: 11px; line-height: 16px;
+  }
+  .carte .criteres { margin-left: auto; }
+  .carte .criteres.complets { color: var(--fait); }
+  .carte .titre {
+    margin-top: 2px; font-size: 14px;
+    display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden;
+  }
+  .zone[data-colonne="fait"] .titre { color: var(--discret); }
+
+  .vide { color: var(--discret); padding: 40px 0; }
+
+  /* Panneau latéral */
+  .panneau {
+    position: fixed; top: 0; right: 0; bottom: 0; z-index: 11;
+    width: var(--largeur-panneau);
+    background: var(--surface);
+    box-shadow: var(--ombre-haute);
+    transform: translateX(100%); transition: transform 0.25s ease;
+    display: flex; flex-direction: column;
+  }
+  body.panneau-ouvert .panneau { transform: none; }
+  @media (max-width: 1100px) {
+    :root { --largeur-panneau: min(640px, 92vw); }
+  }
+
+  .barre {
+    display: flex; align-items: center; gap: 12px;
+    padding: 12px 20px; border-bottom: 1px solid var(--bord);
+    font-size: 13px; color: var(--discret);
+  }
+  .barre .chemin { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .statuts { display: flex; border: 1px solid var(--bord); border-radius: 7px; overflow: hidden; }
+  .statuts button {
+    border: 0; background: none; color: var(--discret);
+    padding: 4px 10px; font: inherit; cursor: pointer;
+  }
+  .statuts button + button { border-left: 1px solid var(--bord); }
+  .statuts button.actif { background: var(--survol); color: var(--texte); font-weight: 600; }
+  .fermer {
+    border: 0; background: none; color: var(--discret); cursor: pointer;
+    font-size: 22px; line-height: 1; padding: 2px 6px; border-radius: 6px;
+  }
+  .fermer:hover, .statuts button:hover { background: var(--survol); }
+
+  .contenu { overflow-y: auto; padding: 8px 48px 64px; }
+  .contenu h1 { font-size: 26px; line-height: 1.3; letter-spacing: -0.01em; margin: 24px 0 16px; }
+  .contenu h2 { font-size: 18px; margin: 32px 0 8px; padding-top: 16px; border-top: 1px solid var(--bord); }
+  .contenu h3 { font-size: 15px; margin: 20px 0 6px; }
+  .contenu p, .contenu ul, .contenu ol { margin: 8px 0; }
+  .contenu li { margin: 2px 0; }
+  .contenu a { color: var(--en-cours); }
+  .contenu img { max-width: 100%; border: 1px solid var(--bord); border-radius: 8px; }
+  .contenu code {
+    font: 13px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    background: var(--survol); padding: 1px 5px; border-radius: 4px;
+  }
+  .contenu pre { background: var(--survol); padding: 12px 16px; border-radius: 8px; overflow-x: auto; }
+  .contenu pre code { padding: 0; background: none; }
+  .contenu blockquote { margin: 8px 0; padding: 2px 16px; border-left: 3px solid var(--bord); color: var(--discret); }
+  .contenu table { border-collapse: collapse; margin: 12px 0; }
+  .contenu th, .contenu td { border: 1px solid var(--bord); padding: 6px 10px; text-align: left; }
+  .contenu input[type="checkbox"] { margin-right: 6px; cursor: pointer; accent-color: var(--fait); }
+  .contenu ul:has(> .task-list-item) { padding-left: 4px; }
+  .contenu .task-list-item { list-style: none; cursor: pointer; }
+  .contenu .task-list-item:has(> input:checked) { color: var(--discret); }
+  .contenu .visuel-absent {
+    padding: 20px 16px; border: 1px dashed var(--bord); border-radius: 8px;
+    color: var(--discret); font-size: 14px; text-align: center;
+  }
+  .contenu .visuel-absent small { display: block; margin-top: 4px; font-size: 12px; opacity: 0.8; }
+
+  .toast {
+    position: fixed; left: 24px; bottom: 24px; z-index: 20;
+    max-width: min(520px, calc(100vw - 48px)); padding: 10px 16px; border-radius: 8px;
+    background: var(--texte); color: var(--fond); font-size: 14px; box-shadow: var(--ombre-haute);
+    transform: translateY(12px); opacity: 0; pointer-events: none;
+    transition: opacity 0.2s, transform 0.2s;
+  }
+  .toast.visible { transform: none; opacity: 1; }
+
+  ::view-transition-group(*) { animation-duration: 0.25s; animation-timing-function: ease; }
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before { transition: none !important; }
+  }
+
+  @media (max-width: 760px) {
+    header, main { padding-left: 16px; padding-right: 16px; }
+    .contenu { padding: 8px 20px 48px; }
+  }
+</style>
+</head>
+<body>
+<header>
+  <h1>Kanban du dojo</h1>
+  <p>Glisse une carte pour la déplacer, clique dessus pour l'ouvrir.</p>
+</header>
+<main id="tableau"></main>
+
+<aside class="panneau" aria-label="Carte">
+  <div class="barre">
+    <span class="chemin"></span>
+    <div class="statuts"></div>
+    <button class="fermer" title="Fermer (Échap)" aria-label="Fermer">×</button>
+  </div>
+  <article class="contenu"></article>
+</aside>
+<div class="toast" role="status" aria-live="polite"></div>
+
+<script>
+  const COLONNES = [
+    { id: "a-faire", nom: "À faire" },
+    { id: "en-cours", nom: "En cours" },
+    { id: "fait", nom: "Fait" },
+  ];
+  const TITRE = document.title;
+  let cartes = null; // null tant que le premier chargement n'a pas abouti
+  let ouverte = null; // id de la carte affichée dans le panneau
+  let affichee = null; // { id, html } du contenu actuellement rendu dans le panneau
+  let glissee = null; // carte en cours de glisser-déposer
+  // Les sprints repliés, mémorisés dans le navigateur ; tout est déplié par défaut
+  const replies = new Set(JSON.parse(localStorage.getItem("kanban-replies") ?? "[]"));
+  const CHEVRON = `<svg width="14" height="14" viewBox="0 0 16 16" aria-hidden="true"><path d="M4 6l4 4 4-4"
+    fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+
+  const echapper = (texte) =>
+    texte.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
+  const nomSprint = (sprint) => sprint.replace(/^sprint-/, "Sprint ");
+  const couleur = (colonne) => `var(--${colonne})`;
+  const fichier = (carte) => carte.id.split("/")[1];
+  const elementCarte = (id) => document.querySelector(`.carte[data-id="${CSS.escape(id)}"]`);
+  const nombreCriteres = (carte) => carte.html.match(/<input[^>]*type="checkbox"/g)?.length ?? 0;
+
+  // Fait glisser les cartes de leur ancienne place à la nouvelle, si le navigateur sait le faire
+  const mouvementReduit = matchMedia("(prefers-reduced-motion: reduce)");
+  function transition(maj) {
+    if (!document.startViewTransition || mouvementReduit.matches || document.hidden) return maj();
+    // Une transition interrompue par la suivante n'est pas une erreur : la mise à jour a bien lieu
+    document.startViewTransition(maj).ready.catch(() => {});
+  }
+
+  let minuteur;
+  function signaler(message) {
+    const toast = document.querySelector(".toast");
+    toast.textContent = message;
+    toast.classList.add("visible");
+    clearTimeout(minuteur);
+    minuteur = setTimeout(() => toast.classList.remove("visible"), 5000);
+  }
+
+  async function charger() {
+    const reponse = await fetch("/api/cartes").catch(() => null);
+    if (!reponse?.ok) return;
+    const nouvelles = await reponse.json();
+    for (const carte of nouvelles) {
+      if (!COLONNES.some((c) => c.id === carte.colonne)) carte.colonne = "a-faire";
+    }
+    // Rien n'a changé sur le disque : on ne touche pas à la page
+    if (JSON.stringify(nouvelles) === JSON.stringify(cartes)) return;
+    const premier = cartes === null;
+    const maj = () => {
+      cartes = nouvelles;
+      afficher();
+      if (ouverte) ouvrir(ouverte);
+    };
+    premier ? maj() : transition(maj);
+  }
+
+  function afficher() {
+    const racine = document.getElementById("tableau");
+    const focus = document.activeElement?.closest?.(".carte")?.dataset.id;
+    if (cartes.length === 0) {
+      racine.innerHTML = `<p class="vide">Aucune carte trouvée dans <code>cartes/sprint-*/</code>.</p>`;
+      return;
+    }
+    const sprints = [...new Set(cartes.map((c) => c.sprint))];
+    let html = `<div class="tableau">`;
+    for (const colonne of COLONNES) {
+      const nombre = cartes.filter((c) => c.colonne === colonne.id).length;
+      html += `<div class="entete" style="--c: ${couleur(colonne.id)}">
+        <span class="pastille"></span>${colonne.nom} <span class="compte">${nombre}</span></div>`;
+    }
+    for (const sprint of sprints) {
+      const duSprint = cartes.filter((c) => c.sprint === sprint);
+      const faites = duSprint.filter((c) => c.colonne === "fait").length;
+      const replie = replies.has(sprint);
+      html += `<div class="sprint${replie ? " replie" : ""}" data-sprint="${echapper(sprint)}">
+        <h2><button class="deplier" aria-expanded="${!replie}">${CHEVRON}${echapper(nomSprint(sprint))}</button></h2>
+        <div class="progres"><div style="width: ${(100 * faites) / duSprint.length}%"></div></div>
+        <span>${faites} / ${duSprint.length}</span>
+      </div>`;
+      for (const colonne of COLONNES) {
+        html += `<div class="zone${replie ? " replie" : ""}" data-sprint="${echapper(sprint)}" data-colonne="${colonne.id}">`;
+        for (const carte of duSprint.filter((c) => c.colonne === colonne.id)) {
+          const numero = fichier(carte).match(/^\d+/)?.[0] ?? "";
+          const total = nombreCriteres(carte);
+          const cochees = carte.coches.filter((i) => i < total).length;
+          const meta = [
+            numero && `<span>${numero}</span>`,
+            carte.bonus && `<span class="tag">Bonus</span>`,
+            cochees > 0 && `<span class="criteres${cochees === total ? " complets" : ""}"
+              title="Critères d'acceptation cochés">${cochees} / ${total}</span>`,
+          ].filter(Boolean).join("");
+          // Le nom de transition suit la carte d'une colonne à l'autre
+          html += `<div class="carte${carte.id === ouverte ? " ouverte" : ""}" draggable="true" tabindex="0"
+            role="button" data-id="${echapper(carte.id)}"
+            style="--c: ${couleur(colonne.id)}; view-transition-name: carte-${cartes.indexOf(carte)}">
+            ${meta ? `<div class="meta">${meta}</div>` : ""}
+            <div class="titre">${echapper(carte.titre)}</div>
+          </div>`;
+        }
+        html += `</div>`;
+      }
+    }
+    racine.innerHTML = html + `</div>`;
+    if (focus) elementCarte(focus)?.focus({ preventScroll: true });
+  }
+
+  async function enregistrer(id, changement) {
+    const reponse = await fetch("/api/tableau", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id, ...changement }),
+    }).catch(() => null);
+    return reponse?.ok;
+  }
+
+  async function deplacer(id, colonne) {
+    const carte = cartes.find((c) => c.id === id);
+    if (!carte || carte.colonne === colonne) return;
+    const avant = carte.colonne;
+    const placer = (c) => () => {
+      carte.colonne = c;
+      afficher();
+      if (ouverte === id) ouvrir(id);
+    };
+    transition(placer(colonne));
+    if (!(await enregistrer(id, { colonne }))) {
+      signaler("Déplacement non enregistré : le serveur du kanban est-il lancé ?");
+      transition(placer(avant));
+    }
+  }
+
+  // Les critères d'acceptation sont repérés par leur position dans la carte
+  async function cocher(id, index, coche) {
+    const carte = cartes.find((c) => c.id === id);
+    if (!carte) return;
+    const avant = carte.coches;
+    carte.coches = coche ? [...avant, index].sort((a, b) => a - b) : avant.filter((i) => i !== index);
+    afficher();
+    if (!(await enregistrer(id, { coches: carte.coches }))) {
+      signaler("Case non enregistrée : le serveur du kanban est-il lancé ?");
+      carte.coches = avant;
+      afficher();
+      if (ouverte === id) ouvrir(id);
+    }
+  }
+
+  function basculer(sprint) {
+    const replie = !replies.has(sprint);
+    replie ? replies.add(sprint) : replies.delete(sprint);
+    localStorage.setItem("kanban-replies", JSON.stringify([...replies]));
+    transition(() => {
+      const duSprint = document.querySelectorAll(`[data-sprint="${CSS.escape(sprint)}"]`);
+      duSprint.forEach((el) => el.classList.toggle("replie", replie));
+      duSprint[0].querySelector(".deplier").setAttribute("aria-expanded", !replie);
+    });
+  }
+
+  // Une carte ouverte à la souris ou au clavier peut finir sous le panneau : si elle est plus
+  // qu'à moitié cachée, on fait défiler le tableau pour l'amener à côté
+  function montrer(id) {
+    const el = elementCarte(id);
+    if (!el) return;
+    const rect = el.getBoundingClientRect();
+    const bordPanneau = innerWidth - document.querySelector(".panneau").offsetWidth;
+    if (rect.left + rect.width / 2 <= bordPanneau && rect.top >= 0 && rect.bottom <= innerHeight) return;
+    el.scrollIntoView({ block: "nearest", inline: "nearest", behavior: mouvementReduit.matches ? "auto" : "smooth" });
+  }
+
+  // Une image pas encore produite : on affiche sa description plutôt qu'une icône cassée
+  function visuelAbsent(img, chemin) {
+    const absent = document.createElement("div");
+    absent.className = "visuel-absent";
+    absent.innerHTML = `${echapper(img.alt || "Visuel")}<small>Image introuvable : ${echapper(chemin)}</small>`;
+    img.replaceWith(absent);
+  }
+
+  function ouvrir(id) {
+    const carte = cartes.find((c) => c.id === id);
+    if (!carte) return fermer();
+    ouverte = id;
+    const panneau = document.querySelector(".panneau");
+    panneau.querySelector(".chemin").textContent = `${nomSprint(carte.sprint)} · ${fichier(carte)}.md`;
+    panneau.querySelector(".statuts").innerHTML = COLONNES.map(
+      (c) => `<button data-colonne="${c.id}" class="${c.id === carte.colonne ? "actif" : ""}">${c.nom}</button>`
+    ).join("");
+    // On ne réécrit le contenu que s'il a changé, pour garder la position de lecture
+    if (affichee?.id !== id || affichee.html !== carte.html) {
+      const contenu = panneau.querySelector(".contenu");
+      contenu.innerHTML = carte.html;
+      // Les images sont relatives au fichier de la carte
+      for (const img of contenu.querySelectorAll("img[src]")) {
+        const chemin = img.getAttribute("src");
+        img.addEventListener("error", () => visuelAbsent(img, chemin), { once: true });
+        img.src = new URL(chemin, `${location.origin}/cartes/${carte.id}`).href;
+      }
+      if (affichee?.id !== id) contenu.scrollTop = 0;
+      affichee = { id, html: carte.html };
+    }
+    panneau.querySelectorAll('.contenu input[type="checkbox"]').forEach((c, i) => {
+      c.disabled = false;
+      c.checked = carte.coches.includes(i);
+    });
+    document.querySelectorAll(".carte").forEach((el) => el.classList.toggle("ouverte", el.dataset.id === id));
+    document.body.classList.add("panneau-ouvert");
+    document.title = `${fichier(carte)} · ${TITRE}`;
+    history.replaceState(null, "", `#${id}`);
+  }
+
+  function fermer() {
+    ouverte = null;
+    document.body.classList.remove("panneau-ouvert");
+    document.querySelectorAll(".carte.ouverte").forEach((el) => el.classList.remove("ouverte"));
+    document.title = TITRE;
+    history.replaceState(null, "", location.pathname);
+  }
+
+  // Ouvrir une carte ; un clic ailleurs que dans le panneau le ferme
+  document.addEventListener("click", (e) => {
+    const deplier = e.target.closest(".deplier");
+    if (deplier) return basculer(deplier.closest(".sprint").dataset.sprint);
+    const carte = e.target.closest(".carte");
+    if (carte) {
+      ouvrir(carte.dataset.id);
+      montrer(carte.dataset.id);
+    } else if (ouverte && !e.target.closest(".panneau")) fermer();
+  });
+  document.querySelector(".fermer").addEventListener("click", fermer);
+  document.addEventListener("keydown", (e) => {
+    const carte = e.target.closest?.(".carte");
+    if (carte && (e.key === "Enter" || e.key === " ")) {
+      e.preventDefault();
+      ouvrir(carte.dataset.id);
+      montrer(carte.dataset.id);
+    } else if (e.key === "Escape" && ouverte) {
+      // Le focus revient sur la carte qu'on vient de fermer
+      const id = ouverte;
+      fermer();
+      elementCarte(id)?.focus({ preventScroll: true });
+    }
+  });
+  // Toute la ligne d'un critère coche sa case, pas seulement la case
+  document.querySelector(".contenu").addEventListener("click", (e) => {
+    const critere = e.target.closest(".task-list-item");
+    if (!critere || e.target.closest("input, a") || getSelection().toString()) return;
+    critere.querySelector(':scope > input[type="checkbox"]')?.click();
+  });
+  document.querySelector(".contenu").addEventListener("change", (e) => {
+    if (!ouverte || !e.target.matches('input[type="checkbox"]')) return;
+    const cases = [...document.querySelectorAll('.contenu input[type="checkbox"]')];
+    cocher(ouverte, cases.indexOf(e.target), e.target.checked);
+  });
+  document.querySelector(".statuts").addEventListener("click", (e) => {
+    const bouton = e.target.closest("button");
+    if (bouton && ouverte) deplacer(ouverte, bouton.dataset.colonne);
+  });
+
+  // Glisser-déposer, à l'intérieur du sprint de la carte
+  const zoneValide = (e) => {
+    const zone = e.target.closest(".zone");
+    return zone && glissee && zone.dataset.sprint === glissee.sprint ? zone : null;
+  };
+  const finGlissement = () => {
+    glissee = null;
+    document.body.classList.remove("glissement");
+    document.querySelectorAll(".glisse, .cible, .possible").forEach((el) => el.classList.remove("glisse", "cible", "possible"));
+  };
+  document.addEventListener("dragstart", (e) => {
+    const el = e.target.closest(".carte");
+    if (!el) return;
+    glissee = cartes.find((c) => c.id === el.dataset.id);
+    e.dataTransfer.setData("text/plain", glissee.id);
+    e.dataTransfer.effectAllowed = "move";
+    document.body.classList.add("glissement");
+    // Les zones où la carte peut atterrir : celles de son sprint
+    document.querySelectorAll(".zone").forEach((z) => z.classList.toggle("possible", z.dataset.sprint === glissee.sprint));
+    requestAnimationFrame(() => el.classList.add("glisse"));
+  });
+  document.addEventListener("dragend", finGlissement);
+  document.addEventListener("dragover", (e) => {
+    const zone = zoneValide(e);
+    document.querySelectorAll(".cible").forEach((el) => el !== zone && el.classList.remove("cible"));
+    if (!zone) return;
+    e.preventDefault();
+    zone.classList.add("cible");
+  });
+  document.addEventListener("drop", (e) => {
+    const zone = zoneValide(e);
+    if (!zone) return;
+    e.preventDefault();
+    const id = glissee.id;
+    finGlissement(); // avant la transition, pour qu'elle parte d'une carte opaque
+    deplacer(id, zone.dataset.colonne);
+  });
+
+  // Recharger quand on revient sur l'onglet : les cartes ont pu changer sur le disque
+  window.addEventListener("focus", charger);
+  document.addEventListener("visibilitychange", () => { if (!document.hidden) charger(); });
+
+  // Une carte ouverte se retrouve dans l'URL : #sprint-1/01-formes
+  window.addEventListener("hashchange", () => {
+    const id = decodeURIComponent(location.hash.slice(1));
+    id ? ouvrir(id) : fermer();
+  });
+  ouverte = decodeURIComponent(location.hash.slice(1)) || null;
+  charger().then(() => ouverte && montrer(ouverte));
+</script>
+</body>
+</html>
