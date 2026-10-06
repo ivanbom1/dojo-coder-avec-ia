@@ -5,7 +5,7 @@ Pose cette question à l'élève, telle quelle, et attends sa réponse :
 > 2. J'ai déjà codé, mais pas en JavaScript (en Python, par exemple).
 > 3. Je connais JavaScript, voire React.
 
-Écris sa réponse dans `.claude/niveau.md`, sur une ligne, par exemple :
+Écris sa réponse dans `cartes/niveau.md`, sur une ligne, par exemple :
 
 ```
 Niveau 2 : a déjà codé, mais pas en JavaScript.

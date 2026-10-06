@@ -1,5 +1,5 @@
 node_modules
 dist
 .claude/settings.local.json
-.claude/niveau.md
+cartes/niveau.md
 cartes/tableau.json
