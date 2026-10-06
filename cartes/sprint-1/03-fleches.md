@@ -5,13 +5,6 @@
 - Un outil Flèche : je clique-glisse d'une forme vers une autre pour les relier.
 - Quand je déplace une forme, les flèches qui y sont reliées suivent.
 
-## Visuels
-
-![Deux formes reliées par une flèche qui s'arrête à leur bord](visuels/03-fleches.png)
-
-<!-- Capture Excalidraw : un rectangle et une ellipse reliés par une flèche droite, qui part
-du bord de l'un et s'arrête au bord de l'autre, pointe visible. -->
-
 ## Critères d'acceptation
 
 Sur http://localhost:5173, après `bun dev` :

@@ -5,13 +5,6 @@
 - De nouvelles alertes renvoyées par les outils : formes qui se chevauchent, élément hors du
   canevas, flèche qui traverse une forme…
 
-## Visuels
-
-![Les trois défauts : chevauchement, élément hors cadre, flèche qui traverse](visuels/06-alertes.png)
-
-<!-- Capture Excalidraw : deux rectangles qui se chevauchent, une ellipse coupée par le bord
-du canevas, une flèche qui traverse un rectangle posé entre ses deux formes. -->
-
 ## Critères d'acceptation
 
 Avec `bun dev` lancé et http://localhost:5173 ouvert :

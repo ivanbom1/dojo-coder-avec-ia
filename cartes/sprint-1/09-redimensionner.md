@@ -7,13 +7,6 @@
 - Une forme sélectionnée affiche des poignées à ses coins.
 - Je fais glisser une poignée pour redimensionner la forme.
 
-## Visuels
-
-![Un rectangle sélectionné avec ses poignées aux coins](visuels/09-redimensionner.png)
-
-<!-- Capture Excalidraw : un rectangle sélectionné, poignées de redimensionnement visibles
-aux coins. -->
-
 ## Critères d'acceptation
 
 Sur http://localhost:5173, après `bun dev` :

@@ -23,6 +23,7 @@ Avec `bun dev` lancé et http://localhost:5173 ouvert :
 - L'adresse http://localhost:5173/mcp est imposée : le MCP est déjà déclaré dans
   `.mcp.json`, et désactivé dans `.claude/settings.json`. Remplace `disabledMcpjsonServers`
   par `enabledMcpjsonServers`.
+- Le SDK MCP officiel pour TypeScript peut être ajouté au projet.
 - Lance `bun dev` avant Claude Code, puis vérifie avec `/mcp`.
 - Si l'agent ne voit pas un outil qu'il vient d'ajouter, choisis `croquis` dans `/mcp`, puis
   « Reconnect », ou relance Claude Code.

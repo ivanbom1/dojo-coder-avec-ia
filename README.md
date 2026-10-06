@@ -66,8 +66,8 @@ bun kanban
 ```
 
 Puis http://localhost:4000. Les cartes se déplacent à la main ; leur position est enregistrée
-dans `cartes/tableau.json` et part avec les commits. Un clic sur une carte l'ouvre, avec la
-stratégie technique remplie pendant `/grill-me`.
+sur le poste, dans `cartes/tableau.json`, ignoré par git. Un clic sur une carte l'ouvre, avec
+la stratégie technique remplie pendant `/grill-me`.
 
 ## Fonctionnement
 

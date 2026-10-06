@@ -7,12 +7,6 @@
 - Avec Sélection, je clique sur une forme pour la sélectionner, et je la fais glisser pour la
   déplacer.
 
-## Visuels
-
-![Deux rectangles et une ellipse, l'ellipse sélectionnée](visuels/01-formes.png)
-
-<!-- Capture Excalidraw : barre d'outils, deux rectangles et une ellipse sélectionnée. -->
-
 ## Critères d'acceptation
 
 Sur http://localhost:5173, après `bun dev` :

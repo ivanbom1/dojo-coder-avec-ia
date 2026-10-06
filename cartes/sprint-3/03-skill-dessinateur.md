@@ -6,14 +6,6 @@
   espacement, légendes.
 - Je compare le même schéma demandé avant et après le skill.
 
-## Visuels
-
-![Le même schéma, brouillon puis propre](visuels/03-dessinateur.png)
-
-<!-- Capture Excalidraw : à gauche, cinq formes reliées posées en vrac (tailles inégales,
-flèches qui se croisent) ; à droite, les mêmes alignées sur une grille, espacées
-régulièrement, avec une légende. -->
-
 ## Critères d'acceptation
 
 Avec `bun dev` lancé et http://localhost:5173 ouvert :

@@ -7,13 +7,6 @@
   forme quand je la déplace.
 - Un double-clic sur un texte me permet de le modifier.
 
-## Visuels
-
-![Un texte libre et un rectangle contenant un texte centré](visuels/02-texte.png)
-
-<!-- Capture Excalidraw : un texte libre « Notes » et un rectangle contenant « Serveur »,
-centré. -->
-
 ## Critères d'acceptation
 
 Sur http://localhost:5173, après `bun dev` :

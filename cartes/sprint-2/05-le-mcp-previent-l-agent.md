@@ -6,13 +6,6 @@
   renvoie ses diagnostics après une écriture.
 - Première alerte : un texte qui dépasse de sa forme.
 
-## Visuels
-
-![Un texte qui dépasse d'un rectangle trop petit](visuels/05-alerte.png)
-
-<!-- Capture Excalidraw : un petit rectangle avec un texte long qui déborde à droite et à
-gauche. -->
-
 ## Critères d'acceptation
 
 Avec `bun dev` lancé et http://localhost:5173 ouvert :
