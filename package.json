@@ -6,7 +6,6 @@
   "scripts": {
     "dev": "bunx --bun vite",
     "build": "tsc --noEmit && bunx --bun vite build",
-    "typecheck": "tsc --noEmit",
     "kanban": "bun kanban/server.ts"
   },
   "dependencies": {
