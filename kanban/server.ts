@@ -1,7 +1,7 @@
 // Le kanban du dojo : `bun kanban`, puis http://localhost:4000
 import { Glob } from "bun";
 import { readFileSync, writeFileSync } from "node:fs";
-import { join, resolve, sep } from "node:path";
+import { join, resolve } from "node:path";
 
 const cartes = resolve(process.env.CARTES ?? join(import.meta.dir, "../cartes"));
 const tableau = join(cartes, "tableau.json");
@@ -66,13 +66,6 @@ const server = Bun.serve({
         ecrireTableau(etats);
         return new Response(null, { status: 204 });
       },
-    },
-    // Les images des cartes (section « Visuels »), en chemin relatif au fichier de la carte
-    "/cartes/*": async (req) => {
-      const fichier = resolve(cartes, decodeURIComponent(new URL(req.url).pathname.slice("/cartes/".length)));
-      const file = Bun.file(fichier);
-      if (!fichier.startsWith(cartes + sep) || !(await file.exists())) return new Response("Introuvable", { status: 404 });
-      return new Response(file);
     },
   },
 });

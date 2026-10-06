@@ -188,7 +188,6 @@
   .contenu p, .contenu ul, .contenu ol { margin: 8px 0; }
   .contenu li { margin: 2px 0; }
   .contenu a { color: var(--en-cours); }
-  .contenu img { max-width: 100%; border: 1px solid var(--bord); border-radius: 8px; }
   .contenu code {
     font: 13px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
     background: var(--survol); padding: 1px 5px; border-radius: 4px;
@@ -202,11 +201,6 @@
   .contenu ul:has(> .task-list-item) { padding-left: 4px; }
   .contenu .task-list-item { list-style: none; cursor: pointer; }
   .contenu .task-list-item:has(> input:checked) { color: var(--discret); }
-  .contenu .visuel-absent {
-    padding: 20px 16px; border: 1px dashed var(--bord); border-radius: 8px;
-    color: var(--discret); font-size: 14px; text-align: center;
-  }
-  .contenu .visuel-absent small { display: block; margin-top: 4px; font-size: 12px; opacity: 0.8; }
 
   .toast {
     position: fixed; left: 24px; bottom: 24px; z-index: 20;
@@ -416,14 +410,6 @@
     el.scrollIntoView({ block: "nearest", inline: "nearest", behavior: mouvementReduit.matches ? "auto" : "smooth" });
   }
 
-  // Une image pas encore produite : on affiche sa description plutôt qu'une icône cassée
-  function visuelAbsent(img, chemin) {
-    const absent = document.createElement("div");
-    absent.className = "visuel-absent";
-    absent.innerHTML = `${echapper(img.alt || "Visuel")}<small>Image introuvable : ${echapper(chemin)}</small>`;
-    img.replaceWith(absent);
-  }
-
   function ouvrir(id) {
     const carte = cartes.find((c) => c.id === id);
     if (!carte) return fermer();
@@ -437,12 +423,6 @@
     if (affichee?.id !== id || affichee.html !== carte.html) {
       const contenu = panneau.querySelector(".contenu");
       contenu.innerHTML = carte.html;
-      // Les images sont relatives au fichier de la carte
-      for (const img of contenu.querySelectorAll("img[src]")) {
-        const chemin = img.getAttribute("src");
-        img.addEventListener("error", () => visuelAbsent(img, chemin), { once: true });
-        img.src = new URL(chemin, `${location.origin}/cartes/${carte.id}`).href;
-      }
       if (affichee?.id !== id) contenu.scrollTop = 0;
       affichee = { id, html: carte.html };
     }
