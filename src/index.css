@@ -11,6 +11,7 @@ body,
 }
 
 .app {
+  position: relative;
   display: flex;
   flex-direction: column;
   height: 100%;
@@ -24,12 +25,347 @@ body,
   border-bottom: 1px solid #ddd;
 }
 
+.toolbar {
+  position: relative;
+  z-index: 20;
+}
+
 .toolbar h1 {
   margin: 0;
   font-size: 18px;
 }
 
-.board {
-  flex: 1;
+/* La liste des schémas : un bouton dans l'en-tête, qui ouvre un panneau. */
+.schemas {
+  position: relative;
+}
+
+.schemas__bouton {
+  padding: 4px 10px;
+  font: inherit;
+  font-size: 14px;
+  color: #1e1e1e;
   background: #fff;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.schemas__panneau {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  z-index: 30;
+  min-width: 400px;
+  padding: 6px;
+  font-size: 14px;
+  background: #fff;
+  border: 1px solid #ddd;
+  border-radius: 12px;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
+}
+
+.schemas__liste {
+  margin: 0 0 6px;
+  padding: 0;
+  list-style: none;
+}
+
+.schemas__ligne {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.schemas__nom {
+  flex: 1;
+  padding: 6px 8px;
+  font: inherit;
+  text-align: left;
+  color: #1e1e1e;
+  background: transparent;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.schemas__nom:hover {
+  background: #f1f3f5;
+}
+
+.schemas__nom--ouvert {
+  font-weight: 600;
+  color: #1971c2;
+  background: #e7f5ff;
+}
+
+.schemas__champ {
+  flex: 1;
+  padding: 5px 8px;
+  font: inherit;
+  border: 1px solid #1971c2;
+  border-radius: 8px;
+}
+
+.schemas__action {
+  padding: 4px 8px;
+  font: inherit;
+  color: #495057;
+  background: transparent;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.schemas__action:hover {
+  background: #f1f3f5;
+}
+
+.schemas__confirmation {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding-right: 4px;
+  font-size: 13px;
+  color: #495057;
+  white-space: nowrap;
+}
+
+.schemas__confirmation button {
+  padding: 4px 12px;
+  font: inherit;
+  font-size: 13px;
+  color: #1e1e1e;
+  background: #fff;
+  border: 1px solid #ced4da;
+  border-radius: 999px;
+  cursor: pointer;
+}
+
+.schemas__confirmation button:hover {
+  background: #f1f3f5;
+}
+
+/* « Oui, supprimer » : rouge, pour qu'on sache que c'est celui qui détruit. */
+.schemas__confirmation button:first-of-type {
+  color: #fff;
+  background: #e03131;
+  border-color: #e03131;
+}
+
+.schemas__confirmation button:first-of-type:hover {
+  background: #c92a2a;
+}
+
+.schemas__nouveau {
+  width: 100%;
+  padding: 6px 8px;
+  font: inherit;
+  color: #1971c2;
+  text-align: left;
+  background: transparent;
+  border: none;
+  border-top: 1px solid #eee;
+  border-radius: 0 0 8px 8px;
+  cursor: pointer;
+}
+
+/* Message quand le schéma enregistré était illisible : discret, refermable, jamais gardé.
+   Posé en bas, par-dessus le canevas : il ne le décale pas et ne gêne pas le panneau d'outils. */
+.avertissement {
+  position: absolute;
+  bottom: 16px;
+  left: 16px;
+  right: 16px;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 0;
+  padding: 8px 16px;
+  font-size: 13px;
+  color: #8a4b00;
+  background: #fff4e0;
+  border: 1px solid #f0c98a;
+  border-radius: 8px;
+}
+
+.avertissement__fermer {
+  margin-left: auto;
+  padding: 0 6px;
+  font: inherit;
+  font-size: 16px;
+  line-height: 1;
+  color: inherit;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+}
+
+.board {
+  position: relative;
+  flex: 1;
+  /* Gris très clair et grille estompée, les mêmes que dans l'image exportée. La grille est du CSS,
+     pas du dessin sur le canvas : le canevas reste transparent et ne contient que le schéma. */
+  background-color: #f1f3f5;
+  background-image:
+    linear-gradient(to right, #e3e6ea 1px, transparent 1px),
+    linear-gradient(to bottom, #e3e6ea 1px, transparent 1px);
+  background-size: var(--pas, 20px) var(--pas, 20px);
+  background-position: var(--gx, 0) var(--gy, 0);
+  overflow: hidden;
+}
+
+/* Le niveau de zoom, qui sert aussi de bouton pour revenir à 100 %. */
+.zoom {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  z-index: 10;
+  padding: 6px 12px;
+  font: inherit;
+  font-size: 13px;
+  color: #1e1e1e;
+  background: #fff;
+  border: 1px solid #ddd;
+  border-radius: 12px;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
+  cursor: pointer;
+}
+
+.zoom:hover {
+  background: #f1f3f5;
+}
+
+.board__canvas {
+  display: block;
+  touch-action: none;
+}
+
+/* Panneau flottant, centré en haut de l'écran : les outils, puis les couleurs de la sélection. */
+.panneau {
+  position: absolute;
+  top: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.tools,
+.couleurs {
+  display: flex;
+  gap: 4px;
+  padding: 6px;
+  background: #fff;
+  border: 1px solid #ddd;
+  border-radius: 12px;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
+}
+
+.tools__separateur {
+  align-self: stretch;
+  width: 1px;
+  margin: 4px 6px;
+  background: #ddd;
+}
+
+.tool__label {
+  white-space: nowrap;
+}
+
+.couleurs {
+  align-items: center;
+  gap: 16px;
+  padding: 8px 12px;
+}
+
+.palette {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.palette__titre {
+  font-size: 12px;
+  color: #495057;
+}
+
+.pastille {
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  background: #fff;
+  border: 1px solid #adb5bd;
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+/* « Aucun » : pas de fond, une pastille vide barrée. */
+.pastille:not([style]) {
+  background: linear-gradient(135deg, #fff 45%, #e03131 45%, #e03131 55%, #fff 55%);
+}
+
+.pastille--active {
+  outline: 2px solid #1971c2;
+  outline-offset: 2px;
+}
+
+.tool {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  min-width: 64px;
+  padding: 6px 10px;
+  font: inherit;
+  font-size: 12px;
+  color: #1e1e1e;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.tool:hover {
+  background: #f1f3f5;
+}
+
+.tool--active {
+  color: #1971c2;
+  background: #e7f5ff;
+  border-color: #1971c2;
+}
+
+.tool__icone {
+  font-size: 18px;
+  line-height: 1;
+}
+
+/* Champ d'édition posé sur le canvas pendant qu'on tape. */
+.text-editor {
+  position: absolute;
+  z-index: 5;
+  margin: 0;
+  padding: 0;
+  width: auto;
+  /* Un champ vide reste cliquable, sinon sa largeur tombe à zéro et le curseur disparaît. */
+  min-width: 1em;
+  border: 1px dashed #1971c2;
+  background: rgba(255, 255, 255, 0.9);
+  font: 20px system-ui, sans-serif;
+  line-height: 1.25;
+  color: #1e1e1e;
+  white-space: pre;
+  overflow: hidden;
+  resize: none;
+  outline: none;
+}
+
+.text-editor--wrap {
+  white-space: pre-wrap;
+  word-break: break-word;
 }

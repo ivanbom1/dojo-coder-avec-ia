@@ -12,6 +12,9 @@ recherche plutôt que le shell.
 
 - `bun install` : installe les dépendances ;
 - `bun run build` : vérifie les types et construit l'appli ; c'est ta vérification ;
+- `bun run test` : rejoue les cartes déjà faites dans un vrai navigateur, via `tests/`.
+  **Relance la suite entière avant de conclure chaque nouvelle carte**, sans quoi un test
+  rouge passerait pour une carte finie ;
 - `bun dev` : l'appli sur http://localhost:5173. Il ne rend pas la main : l'élève le lance
   dans son propre terminal.
 
